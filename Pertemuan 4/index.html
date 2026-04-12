@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AJAX Profil Viewer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" />
+
+  <style>
+    /* ── Reset & Variables ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0e0f13;
+      --surface:   #16181f;
+      --card:      #1d2029;
+      --border:    #2c2f3d;
+      --accent:    #f0c040;
+      --accent2:   #e07a40;
+      --text:      #e8e9ef;
+      --muted:     #7b7f96;
+      --success:   #48c98e;
+      --radius:    14px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 60px 20px 80px;
+    }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      border-radius: 99px;
+      padding: 4px 14px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      line-height: 1.15;
+      letter-spacing: -.01em;
+      background: linear-gradient(135deg, var(--text) 40%, var(--muted));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: .95rem;
+      font-weight: 300;
+    }
+
+    /* ── Button ── */
+    .btn-fetch {
+      position: relative;
+      background: var(--accent);
+      color: #0e0f13;
+      border: none;
+      border-radius: 10px;
+      padding: 14px 34px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: .02em;
+      cursor: pointer;
+      transition: transform .15s, box-shadow .15s, background .2s;
+      box-shadow: 0 0 0 0 rgba(240,192,64,.4);
+      overflow: hidden;
+    }
+
+    .btn-fetch:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(240,192,64,.25);
+    }
+
+    .btn-fetch:active { transform: translateY(0); }
+
+    .btn-fetch.loading {
+      background: var(--border);
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    .btn-fetch .spinner {
+      display: none;
+      width: 16px; height: 16px;
+      border: 2px solid transparent;
+      border-top-color: var(--muted);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    .btn-fetch.loading .spinner { display: inline-block; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Status bar ── */
+    #status {
+      margin-top: 16px;
+      font-size: .82rem;
+      color: var(--muted);
+      height: 20px;
+      transition: color .3s;
+    }
+    #status.ok  { color: var(--success); }
+    #status.err { color: #f06060; }
+
+    /* ── Results container ── */
+    #hasil-profil {
+      width: 100%;
+      max-width: 740px;
+      margin-top: 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* ── Profile card ── */
+    .profile-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 26px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      opacity: 0;
+      transform: translateY(18px);
+      animation: slideIn .38s forwards;
+    }
+
+    @keyframes slideIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* stagger delays */
+    .profile-card:nth-child(1) { animation-delay: .04s; }
+    .profile-card:nth-child(2) { animation-delay: .10s; }
+    .profile-card:nth-child(3) { animation-delay: .16s; }
+    .profile-card:nth-child(4) { animation-delay: .22s; }
+    .profile-card:nth-child(5) { animation-delay: .28s; }
+
+    .avatar {
+      width: 50px; height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.3rem;
+      color: #0e0f13;
+      flex-shrink: 0;
+    }
+
+    .card-body { flex: 1; }
+
+    .card-name {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.15rem;
+      color: var(--text);
+    }
+
+    .card-detail {
+      margin-top: 6px;
+      font-size: .83rem;
+      color: var(--muted);
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .card-detail span { display: flex; align-items: center; gap: 5px; }
+
+    .card-pill {
+      font-size: .75rem;
+      font-weight: 500;
+      background: rgba(240,192,64,.12);
+      color: var(--accent);
+      border-radius: 99px;
+      padding: 3px 10px;
+      flex-shrink: 0;
+    }
+
+    /* ── Error box ── */
+    .error-box {
+      background: rgba(240,96,96,.08);
+      border: 1px solid rgba(240,96,96,.3);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      color: #f09090;
+      font-size: .9rem;
+    }
+
+    /* ── Code hint ── */
+    .hint-box {
+      width: 100%;
+      max-width: 740px;
+      margin-top: 48px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+    }
+
+    .hint-box h3 {
+      font-size: .78rem;
+      font-weight: 600;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .hint-box pre {
+      font-family: 'Fira Code', 'Courier New', monospace;
+      font-size: .82rem;
+      color: #a0e8b0;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="tag">AJAX Demo</div>
+    <h1>Profil dari Server</h1>
+    <p class="subtitle">Data diambil dari <code>data.php</code> tanpa reload halaman</p>
+  </header>
+
+  <!-- Tombol utama -->
+  <button class="btn-fetch" id="btn-ambil" onclick="ambilData()">
+    <span class="spinner"></span>
+    <span class="btn-label">Tampilkan Profil</span>
+  </button>
+
+  <!-- Status kecil di bawah tombol -->
+  <p id="status"></p>
+
+  <!-- Tempat data ditampilkan -->
+  <div id="hasil-profil"></div>
+
+  <!-- Hint cara jalankan -->
+  <div class="hint-box">
+    <h3>💡 Cara menjalankan</h3>
+    <pre>
+# Taruh kedua file di folder XAMPP (htdocs) lalu buka:
+http://localhost/nama-folder/index.html
+
+# Atau pakai PHP built-in server:
+php -S localhost:8000
+# lalu buka: http://localhost:8000/index.html
+    </pre>
+  </div>
+
+  <!-- ────────── JavaScript / AJAX ────────── -->
+  <script>
+    async function ambilData() {
+      const btn      = document.getElementById('btn-ambil');
+      const status   = document.getElementById('status');
+      const container = document.getElementById('hasil-profil');
+
+      // ── 1. Tunjukkan state loading ──
+      btn.classList.add('loading');
+      btn.querySelector('.btn-label').textContent = 'Mengambil data…';
+      status.textContent = '';
+      status.className = '';
+      container.innerHTML = '';
+
+      try {
+        // ── 2. Kirim request ke data.php ──
+        const response = await fetch('data.php');
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        // ── 3. Parse JSON dari server ──
+        const data = await response.json();
+
+        // ── 4. Render kartu untuk setiap profil ──
+        if (!Array.isArray(data) || data.length === 0) {
+          container.innerHTML = '<div class="error-box">Data kosong dari server.</div>';
+          return;
+        }
+
+        data.forEach(profil => {
+          const inisial = profil.nama.charAt(0).toUpperCase();
+          const card = document.createElement('div');
+          card.className = 'profile-card';
+          card.innerHTML = `
+            <div class="avatar">${inisial}</div>
+            <div class="card-body">
+              <div class="card-name">${profil.nama}</div>
+              <div class="card-detail">
+                <span>💼 ${profil.pekerjaan}</span>
+                <span>📍 ${profil.lokasi}</span>
+              </div>
+              <!-- Format teks sesuai instruksi -->
+              <!-- Nama: ${profil.nama} | Pekerjaan: ${profil.pekerjaan} | Lokasi: ${profil.lokasi} -->
+            </div>
+            <div class="card-pill">${profil.pekerjaan.split(' ')[0]}</div>
+          `;
+          container.appendChild(card);
+        });
+
+        // ── 5. Update status sukses ──
+        status.textContent = `✓ ${data.length} profil berhasil dimuat`;
+        status.className = 'ok';
+
+      } catch (err) {
+        // ── 6. Tampilkan error jika fetch gagal ──
+        container.innerHTML = `
+          <div class="error-box">
+            <strong>Gagal mengambil data.</strong><br/>
+            ${err.message}<br/><br/>
+            Pastikan file <code>data.php</code> ada dan server PHP sudah berjalan.
+          </div>`;
+        status.textContent = '✗ Request gagal';
+        status.className = 'err';
+
+      } finally {
+        // ── 7. Kembalikan tombol ke state normal ──
+        btn.classList.remove('loading');
+        btn.querySelector('.btn-label').textContent = 'Tampilkan Profil';
+      }
+    }
+  </script>
+
+</body>
+</html>
