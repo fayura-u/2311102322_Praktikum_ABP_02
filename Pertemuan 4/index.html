@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PROFIL — AJAX</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;700;800&display=swap" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gray-0:  #f4f2ee;
+      --gray-1:  #e8e5df;
+      --gray-2:  #c9c5bc;
+      --gray-3:  #a8a49c;
+      --gray-4:  #7a776f;
+      --black-1: #2a2927;
+      --black-2: #1a1917;
+      --black-3: #0d0d0b;
+      --green-1: #b5d17a;
+      --green-2: #7aab2e;
+      --green-3: #3d6010;
+      --font-d:  'Syne', sans-serif;
+      --font-m:  'Space Mono', monospace;
+    }
+
+    html, body {
+      background: var(--gray-0);
+      color: var(--black-2);
+      font-family: var(--font-m);
+      min-height: 100vh;
+    }
+
+    .page {
+      display: grid;
+      grid-template-columns: 210px 1fr;
+      grid-template-rows: auto 1fr;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      grid-row: 1 / 3;
+      border-right: 1px solid var(--gray-2);
+      padding: 48px 26px;
+      display: flex;
+      flex-direction: column;
+      gap: 48px;
+      background: var(--gray-1);
+    }
+
+    .logo {
+      font-family: var(--font-d);
+      font-weight: 800;
+      font-size: 1.05rem;
+      color: var(--black-3);
+      letter-spacing: -.02em;
+      line-height: 1.1;
+    }
+    .logo span {
+      display: block;
+      font-size: .6rem;
+      font-family: var(--font-m);
+      font-weight: 400;
+      color: var(--gray-4);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      margin-top: 5px;
+    }
+
+    .nav {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-size: .68rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--gray-4);
+    }
+    .nav a {
+      text-decoration: none;
+      color: inherit;
+      padding: 8px 0;
+      border-bottom: 1px solid transparent;
+      transition: color .15s, border-color .15s;
+    }
+    .nav a:hover, .nav a.active {
+      color: var(--black-2);
+      border-bottom-color: var(--green-2);
+    }
+
+    .sidebar-foot {
+      margin-top: auto;
+      font-size: .62rem;
+      color: var(--gray-3);
+      letter-spacing: .05em;
+      line-height: 1.7;
+    }
+
+    /* Topbar */
+    .topbar {
+      border-bottom: 1px solid var(--gray-2);
+      padding: 16px 36px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--gray-0);
+    }
+    .topbar-title {
+      font-family: var(--font-d);
+      font-weight: 700;
+      font-size: 1.4rem;
+      color: var(--black-3);
+      letter-spacing: -.03em;
+    }
+    .topbar-meta {
+      font-size: .65rem;
+      font-family: var(--font-m);
+      color: var(--gray-4);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    /* Main */
+    .main {
+      padding: 36px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    /* Action row */
+    .action-row {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .btn-fetch {
+      font-family: var(--font-m);
+      font-size: .7rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--gray-0);
+      background: var(--black-2);
+      border: 1px solid var(--black-3);
+      padding: 13px 26px;
+      cursor: pointer;
+      position: relative;
+      transition: background .15s;
+      outline: none;
+    }
+    .btn-fetch::after {
+      content: '';
+      position: absolute;
+      inset: 3px;
+      border: 1px solid var(--green-2);
+      opacity: 0;
+      transition: opacity .2s;
+    }
+    .btn-fetch:hover { background: var(--black-3); }
+    .btn-fetch:hover::after { opacity: 1; }
+    .btn-fetch:active { transform: scale(.985); }
+    .btn-fetch.loading {
+      background: var(--gray-2);
+      color: var(--gray-4);
+      pointer-events: none;
+    }
+    .btn-fetch.loading::after { opacity: 0; }
+
+    #status {
+      font-size: .65rem;
+      font-family: var(--font-m);
+      letter-spacing: .08em;
+      color: var(--gray-4);
+      transition: color .3s;
+    }
+    #status.ok  { color: var(--green-3); }
+    #status.err { color: #7a2020; }
+
+    /* Results grid — separated by 1px gaps */
+    #hasil-profil {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 1px;
+      background: var(--gray-2);
+      border: 1px solid var(--gray-2);
+    }
+
+    /* Profile card */
+    .profile-card {
+      background: var(--gray-0);
+      padding: 26px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      opacity: 0;
+      transform: translateY(10px);
+      animation: cardIn .3s forwards;
+      position: relative;
+    }
+    .profile-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 2px;
+      height: 0;
+      background: var(--green-2);
+      transition: height .4s ease;
+    }
+    .profile-card:hover::before { height: 100%; }
+
+    @keyframes cardIn { to { opacity: 1; transform: translateY(0); } }
+    .profile-card:nth-child(1) { animation-delay: .04s; }
+    .profile-card:nth-child(2) { animation-delay: .09s; }
+    .profile-card:nth-child(3) { animation-delay: .14s; }
+    .profile-card:nth-child(4) { animation-delay: .19s; }
+    .profile-card:nth-child(5) { animation-delay: .24s; }
+
+    .card-index {
+      font-family: var(--font-d);
+      font-weight: 800;
+      font-size: 2.6rem;
+      color: var(--gray-1);
+      line-height: 1;
+      letter-spacing: -.04em;
+    }
+    .card-name {
+      font-family: var(--font-d);
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: var(--black-2);
+      letter-spacing: -.02em;
+      border-bottom: 1px solid var(--gray-2);
+      padding-bottom: 14px;
+    }
+    .card-fields {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .card-field {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+    }
+    .field-key {
+      font-size: .6rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--gray-4);
+      flex-shrink: 0;
+    }
+    .field-val {
+      font-size: .75rem;
+      color: var(--black-1);
+      text-align: right;
+    }
+    .card-tag {
+      align-self: flex-start;
+      font-size: .58rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--green-3);
+      border: 1px solid var(--green-2);
+      padding: 3px 8px;
+      margin-top: auto;
+    }
+
+    /* Error */
+    .error-box {
+      background: var(--gray-1);
+      border-left: 2px solid #7a2020;
+      padding: 14px 18px;
+      font-size: .75rem;
+      color: var(--black-1);
+      line-height: 1.6;
+      grid-column: 1 / -1;
+    }
+
+    /* Hint */
+    .hint-box {
+      border: 1px solid var(--gray-2);
+      padding: 18px 22px;
+      background: var(--gray-1);
+    }
+    .hint-label {
+      font-size: .58rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--gray-4);
+      margin-bottom: 10px;
+    }
+    .hint-box pre {
+      font-family: var(--font-m);
+      font-size: .7rem;
+      color: var(--black-1);
+      white-space: pre-wrap;
+      word-break: break-all;
+      line-height: 1.9;
+    }
+    .hl { color: var(--green-3); }
+
+    @media (max-width: 600px) {
+      .page { grid-template-columns: 1fr; }
+      .sidebar {
+        grid-row: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--gray-2);
+        padding: 22px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 20px;
+      }
+      .sidebar-foot { display: none; }
+      .main { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+  <aside class="sidebar">
+    <div class="logo">
+      AJAX<br>DATABASE
+      <span>v1.0.0 / 2025</span>
+    </div>
+
+    <div class="sidebar-foot">
+      fetch() API<br>
+      PHP JSON server<br>
+      No page reload
+    </div>
+  </aside>
+
+  <header class="topbar">
+    <div class="topbar-title">Direktori Profil</div>
+    <div class="topbar-meta" id="topbar-count">— records</div>
+  </header>
+
+  <main class="main">
+
+    <div class="action-row">
+      <button class="btn-fetch" id="btn-ambil" onclick="ambilData()">
+        [ Tampilkan Profil ]
+      </button>
+      <span id="status">AWAITING REQUEST</span>
+    </div>
+
+    <div id="hasil-profil"></div>
+
+    <div class="hint-box">
+      <div class="hint-label">// cara menjalankan</div>
+      <pre>
+<span class="hl">XAMPP</span>   → htdocs/nama-folder/index.html
+        → http://localhost/nama-folder/
+
+<span class="hl">PHP CLI</span> → php -S localhost:8000
+        → http://localhost:8000/index.html</pre>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  const TAG_MAP = {
+    'Web Developer':   'DEV',
+    'UI/UX Designer':  'DSN',
+    'Data Analyst':    'DAT',
+    'DevOps Engineer': 'OPS',
+    'Backend Engineer':'SRV',
+  };
+
+  async function ambilData() {
+    const btn       = document.getElementById('btn-ambil');
+    const status    = document.getElementById('status');
+    const container = document.getElementById('hasil-profil');
+    const meta      = document.getElementById('topbar-count');
+
+    btn.classList.add('loading');
+    btn.textContent = '[ Loading... ]';
+    status.textContent = 'FETCHING DATA...';
+    status.className = '';
+    container.innerHTML = '';
+    meta.textContent = '— records';
+
+    try {
+      const res = await fetch('data.php');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+
+      if (!Array.isArray(data) || data.length === 0) {
+        container.innerHTML = '<div class="error-box">DATA KOSONG DARI SERVER.</div>';
+        return;
+      }
+
+      data.forEach((p, i) => {
+        const tag = TAG_MAP[p.pekerjaan] || p.pekerjaan.slice(0, 3).toUpperCase();
+        const num = String(i + 1).padStart(2, '0');
+        const card = document.createElement('div');
+        card.className = 'profile-card';
+        card.innerHTML =
+          '<div class="card-index">' + num + '</div>' +
+          '<div class="card-name">' + p.nama.toUpperCase() + '</div>' +
+          '<div class="card-fields">' +
+            '<div class="card-field"><span class="field-key">Nama</span><span class="field-val">' + p.nama + '</span></div>' +
+            '<div class="card-field"><span class="field-key">Pekerjaan</span><span class="field-val">' + p.pekerjaan + '</span></div>' +
+            '<div class="card-field"><span class="field-key">Lokasi</span><span class="field-val">' + p.lokasi + '</span></div>' +
+          '</div>' +
+          '<div class="card-tag">' + tag + '</div>';
+        container.appendChild(card);
+      });
+
+      status.textContent = 'OK — ' + data.length + ' RECORDS LOADED';
+      status.className = 'ok';
+      meta.textContent = data.length + ' records';
+
+    } catch (err) {
+      container.innerHTML =
+        '<div class="error-box"><strong>REQUEST GAGAL</strong><br/>' +
+        err.message + '<br/>Pastikan data.php ada dan server PHP aktif.</div>';
+      status.textContent = 'ERR — REQUEST FAILED';
+      status.className = 'err';
+    } finally {
+      btn.classList.remove('loading');
+      btn.textContent = '[ Tampilkan Profil ]';
+    }
+  }
+</script>
+
+</body>
+</html>
