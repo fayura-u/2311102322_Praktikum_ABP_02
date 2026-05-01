@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Informasi Inventaris Toko</title>
+    <style>
+        :root {
+            --navy: #0b2167;
+            --navy-dark: #071747;
+            --gold: #d8a326;
+            --red: #b8192b;
+            --green: #2f6f3e;
+            --paper: #ffffff;
+            --soft: #f1f1f1;
+            --line: #c6c6c6;
+            --text: #222222;
+            --muted: #595959;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 14px;
+            background: #d9d9d9;
+            color: var(--text);
+        }
+
+        .topbar {
+            background: var(--navy-dark);
+            color: #ffffff;
+            border-bottom: 4px solid var(--gold);
+        }
+
+        .topbar-inner,
+        .header-inner,
+        .page {
+            width: min(1180px, calc(100% - 28px));
+            margin: 0 auto;
+        }
+
+        .topbar-inner {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 8px 0;
+            font-size: 12px;
+        }
+
+        .header {
+            background: #ffffff;
+            border-bottom: 1px solid #a9a9a9;
+        }
+
+        .header-inner {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            align-items: center;
+            gap: 18px;
+            padding: 16px 0;
+        }
+
+        .logo-mark {
+            width: 64px;
+            height: 64px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            border: 2px solid var(--navy);
+            background: #ffffff;
+        }
+
+        .logo-mark span:nth-child(1),
+        .logo-mark span:nth-child(4) {
+            background: var(--gold);
+        }
+
+        .logo-mark span:nth-child(2),
+        .logo-mark span:nth-child(3) {
+            background: var(--navy);
+        }
+
+        .agency-title {
+            margin: 0;
+            color: var(--navy);
+            font-size: 20px;
+            line-height: 1.2;
+            text-transform: uppercase;
+        }
+
+        .agency-subtitle {
+            margin: 4px 0 0;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .search-box {
+            display: flex;
+            width: 260px;
+        }
+
+        .search-box input {
+            border-right: 0;
+        }
+
+        .search-box button {
+            width: 42px;
+            border: 1px solid var(--line);
+            background: #eeeeee;
+            cursor: pointer;
+        }
+
+        .nav {
+            background: var(--navy);
+            border-bottom: 1px solid #00113c;
+        }
+
+        .nav ul {
+            width: min(1180px, calc(100% - 28px));
+            margin: 0 auto;
+            padding: 0;
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .nav a {
+            display: block;
+            padding: 12px 18px;
+            color: #ffffff;
+            text-decoration: none;
+            border-right: 1px solid rgba(255, 255, 255, 0.24);
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        .nav a:hover,
+        .nav a.is-active {
+            background: #173483;
+        }
+
+        .page {
+            padding: 18px 0 34px;
+        }
+
+        .notice {
+            background: #fff8d5;
+            border: 1px solid #d5bd55;
+            padding: 10px 12px;
+            margin-bottom: 14px;
+            color: #4f4100;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 16px;
+            align-items: start;
+        }
+
+        .panel {
+            background: var(--paper);
+            border: 1px solid #9f9f9f;
+            margin-bottom: 16px;
+        }
+
+        .panel-title {
+            margin: 0;
+            padding: 9px 12px;
+            background: var(--navy);
+            border-bottom: 3px solid var(--gold);
+            color: #ffffff;
+            font-size: 15px;
+            text-transform: uppercase;
+        }
+
+        .panel-body {
+            padding: 14px;
+        }
+
+        .login-card {
+            background: #f7f7f7;
+            border: 1px solid var(--line);
+            padding: 12px;
+        }
+
+        .login-card .btn {
+            width: 100%;
+        }
+
+        .field {
+            margin-bottom: 11px;
+        }
+
+        label,
+        .section-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333333;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            min-height: 34px;
+            padding: 7px 8px;
+            border: 1px solid #9e9e9e;
+            border-radius: 0;
+            background: #ffffff;
+            color: var(--text);
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 13px;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        .btn {
+            min-height: 34px;
+            border: 1px solid #777777;
+            border-radius: 0;
+            padding: 7px 12px;
+            font-family: Arial, Helvetica, sans-serif;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: var(--navy);
+            color: #ffffff;
+            border-color: #001b5c;
+        }
+
+        .btn-primary:hover {
+            background: #173483;
+        }
+
+        .btn-secondary {
+            background: #eeeeee;
+            color: #222222;
+        }
+
+        .btn-danger {
+            background: var(--red);
+            color: #ffffff;
+            border-color: #8a0f1e;
+        }
+
+        .full {
+            grid-column: 1 / -1;
+        }
+
+        .help {
+            margin: 10px 0 0;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.45;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .stat-box {
+            border: 1px solid #a8a8a8;
+            background: #f3f3f3;
+            padding: 11px;
+        }
+
+        .stat-box span {
+            display: block;
+            color: var(--muted);
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .stat-box strong {
+            display: block;
+            margin-top: 4px;
+            color: var(--navy);
+            font-size: 28px;
+            line-height: 1;
+        }
+
+        .toolbar {
+            display: grid;
+            grid-template-columns: minmax(220px, 1fr) 190px auto;
+            gap: 8px;
+            padding: 10px;
+            background: #eeeeee;
+            border: 1px solid var(--line);
+            margin-bottom: 12px;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+            border: 1px solid #999999;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #ffffff;
+        }
+
+        th,
+        td {
+            padding: 9px 10px;
+            text-align: left;
+            border: 1px solid #b7b7b7;
+            vertical-align: top;
+        }
+
+        th {
+            background: var(--navy);
+            color: #ffffff;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #f4f4f4;
+        }
+
+        .badge {
+            display: inline-block;
+            min-width: 92px;
+            padding: 4px 7px;
+            border: 1px solid #b5b5b5;
+            background: #eeeeee;
+            color: #222222;
+            font-size: 12px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .hint {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .agenda-list {
+            margin: 0;
+            padding-left: 18px;
+            line-height: 1.6;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            display: none;
+            place-items: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.55);
+        }
+
+        .modal.is-open {
+            display: grid;
+        }
+
+        .modal-content {
+            width: min(560px, 100%);
+            background: #ffffff;
+            border: 1px solid #777777;
+        }
+
+        .modal-content h3 {
+            margin: 0;
+            padding: 10px 14px;
+            background: var(--navy);
+            border-bottom: 3px solid var(--gold);
+            color: #ffffff;
+            font-size: 15px;
+            text-transform: uppercase;
+        }
+
+        .modal-content form,
+        .modal-content > p,
+        .modal-actions {
+            padding: 14px;
+        }
+
+        .modal-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            padding-top: 0;
+        }
+
+        .footer {
+            margin-top: 18px;
+            padding: 14px 0;
+            background: var(--navy-dark);
+            color: #ffffff;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        @media (max-width: 860px) {
+            .header-inner,
+            .main-grid,
+            .toolbar,
+            .stats,
+            .form-grid,
+            .modal-actions {
+                grid-template-columns: 1fr;
+            }
+
+            .search-box {
+                width: 100%;
+            }
+
+            .nav a {
+                padding: 10px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <div class="topbar-inner">
+            <span>Jumat, 01 Mei 2026 | 09:00 WIB</span>
+            <span>Bahasa Indonesia | Portal Praktikum ABP 02</span>
+        </div>
+    </div>
+
+    <header class="header">
+        <div class="header-inner">
+            <div class="logo-mark" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <div>
+                <h1 class="agency-title">Dinas Inventaris dan Perdagangan Toko</h1>
+                <p class="agency-subtitle">Sistem Informasi Data Produk - Pertemuan 5 Praktikum ABP 02</p>
+            </div>
+            <div class="search-box">
+                <input type="search" placeholder="Pencarian situs...">
+                <button type="button" aria-label="Cari">Cari</button>
+            </div>
+        </div>
+    </header>
+
+    <nav class="nav" aria-label="Menu utama">
+        <ul>
+            <li><a class="is-active" href="#">Beranda</a></li>
+            <li><a href="#">Profil</a></li>
+            <li><a href="#">Rencana Login</a></li>
+            <li><a href="#">Data Produk</a></li>
+            <li><a href="#">Laporan</a></li>
+            <li><a href="#">Kontak</a></li>
+        </ul>
+    </nav>
+
+    <main class="page">
+        <div class="notice">
+            Selamat datang di rancangan antarmuka Sistem Inventaris Toko. Halaman ini menampilkan rencana login dan pengelolaan data produk.
+        </div>
+
+        <div class="main-grid">
+            <aside>
+                <section class="panel">
+                    <h2 class="panel-title">Rencana Halaman Login</h2>
+                    <div class="panel-body">
+                        <div class="login-card">
+                            <div class="field">
+                                <label for="login-email">Alamat Email</label>
+                                <input id="login-email" type="email" placeholder="admin@inventaris.go.id">
+                            </div>
+                            <div class="field">
+                                <label for="login-password">Kata Sandi</label>
+                                <input id="login-password" type="password" placeholder="Masukkan kata sandi">
+                            </div>
+                            <button class="btn btn-primary full" type="button">Masuk Sistem</button>
+                            <p class="help">Akses terbatas untuk operator inventaris, admin toko, dan petugas validasi data produk.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <h2 class="panel-title">Rencana Modul</h2>
+                    <div class="panel-body">
+                        <ul class="agenda-list">
+                            <li>Login operator menggunakan email dan kata sandi.</li>
+                            <li>CRUD data produk toko.</li>
+                            <li>Filter kategori dan pencarian produk.</li>
+                            <li>Modal konfirmasi penghapusan data.</li>
+                        </ul>
+                    </div>
+                </section>
+            </aside>
+
+            <section class="panel">
+                <h2 class="panel-title">Data Produk</h2>
+                <div class="panel-body">
+                    <div class="stats">
+                        <div class="stat-box">
+                            <span>Total Produk</span>
+                            <strong id="stat-total">0</strong>
+                        </div>
+                        <div class="stat-box">
+                            <span>Stok Rendah</span>
+                            <strong id="stat-low-stock">0</strong>
+                        </div>
+                        <div class="stat-box">
+                            <span>Kategori</span>
+                            <strong id="stat-categories">0</strong>
+                        </div>
+                    </div>
+
+                    <div class="toolbar">
+                        <input id="search-input" type="search" placeholder="Cari nama produk atau kategori...">
+                        <select id="filter-category">
+                            <option value="">Semua kategori</option>
+                        </select>
+                        <button id="open-create-modal" class="btn btn-primary" type="button">Tambah Produk</button>
+                    </div>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nama Produk</th>
+                                    <th>Kategori</th>
+                                    <th>Harga</th>
+                                    <th>Stok</th>
+                                    <th>Status</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="product-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="footer">
+        Sistem Informasi Inventaris Toko | Praktikum ABP 02 | Tampilan Portal Pemerintahan Sederhana
+    </footer>
+
+    <section id="product-modal" class="modal" aria-hidden="true">
+        <div class="modal-content">
+            <h3 id="product-modal-title">Tambah Produk</h3>
+            <form id="product-form" class="form-grid">
+                <input id="product-id" type="hidden">
+
+                <div>
+                    <label class="section-label" for="product-name">Nama Produk</label>
+                    <input id="product-name" type="text" placeholder="Contoh: Beras Premium">
+                </div>
+                <div>
+                    <label class="section-label" for="product-category">Kategori</label>
+                    <input id="product-category" type="text" placeholder="Sembako">
+                </div>
+                <div>
+                    <label class="section-label" for="product-price">Harga</label>
+                    <input id="product-price" type="number" placeholder="15000">
+                </div>
+                <div>
+                    <label class="section-label" for="product-stock">Stok</label>
+                    <input id="product-stock" type="number" placeholder="30">
+                </div>
+                <div class="full">
+                    <label class="section-label" for="product-description">Deskripsi</label>
+                    <textarea id="product-description" rows="4" placeholder="Catatan produk untuk inventaris"></textarea>
+                </div>
+
+                <div class="modal-actions full">
+                    <button class="btn btn-secondary" type="button" data-close="product-modal">Batal</button>
+                    <button class="btn btn-primary" type="submit">Simpan Produk</button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <section id="delete-modal" class="modal" aria-hidden="true">
+        <div class="modal-content">
+            <h3>Konfirmasi Hapus</h3>
+            <p id="delete-message">Yakin ingin menghapus produk ini?</p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" type="button" data-close="delete-modal">Batal</button>
+                <button id="confirm-delete-button" class="btn btn-danger" type="button">Ya, Hapus</button>
+            </div>
+        </div>
+    </section>
+
+    <script src="./app.js"></script>
+</body>
+</html>
